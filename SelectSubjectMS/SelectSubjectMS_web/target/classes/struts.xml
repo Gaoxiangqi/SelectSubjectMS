@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE struts PUBLIC  
+    "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"  
+    "http://struts.apache.org/dtds/struts-2.3.dtd">  
+      
+<struts>  
+    <constant name="struts.action.extension" value="action" />  
+    
+      <!-- 用户模块 -->
+      <package name="basicstruts2" extends="struts-default">
+      	<!-- 全局结果集定义 -->
+		<global-results>
+			<result name="login">/login.jsp</result>
+			<result name="unauthorized">/unauthorized.jsp</result>
+		</global-results>
+		
+		<global-exception-mappings>
+			<exception-mapping result="unauthorized" 
+				exception="org.apache.shiro.authz.UnauthorizedException"></exception-mapping>
+		</global-exception-mappings>
+		
+      			<!-- 用户模块 -->
+      			<action name="user_*" method="{1}" class="com.qgx.selectSubjectMS.action.UserAction">
+      				<result name="Admin" type="redirect">admin/main.jsp</result>
+      				<result name="DeptHead" type="redirect">deptHead/main.jsp</result>
+      				<result name="Teacher" type="redirect">teacher/main.jsp</result>
+      				<result name="Student" type="redirect">student/main.jsp</result>
+      				<result name="login" >login.jsp</result>
+      				<result name="subjectDetail">subjectDetail.jsp</result>
+      				<result name="emailSuccess">emailSuccess.jsp</result>
+      				<result name="resetPsw">resetPsw.jsp</result>
+      				<result name="findPassword">findPassword.jsp</result>
+      				<result name="resetSuccess">resetSuccess.jsp</result>
+      			</action>
+      			
+      			<!-- 管理员模块 -->
+      			<action name="admin_*" method="{1}" class="com.qgx.selectSubjectMS.action.AdminAction">
+      			</action>
+      			
+      			<!-- 学生模块 -->
+      			<action name="student_*" method="{1}" class="com.qgx.selectSubjectMS.action.StudentAction">
+      			     <result name="ModifySuccess" type="redirect">modifySuccess.jsp</result>
+      			</action>
+      			
+      			<!-- 老师 -->
+      			<action name="teacher_*" method="{1}" class="com.qgx.selectSubjectMS.action.TeacherAction">
+      			</action>
+      			
+      			<!-- 系主任 -->
+      			<action name="deptHead_*" method="{1}" class="com.qgx.selectSubjectMS.action.DeptHeadAction">
+      			     <result name="selectTime">deptHead/selectTime.jsp</result>
+      			     <result name="limit">deptHead/limit.jsp</result>
+      			</action>
+      </package>
+   
+
+</struts>    

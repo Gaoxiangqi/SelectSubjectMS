@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:jaxws="http://cxf.apache.org/jaxws"
+	xmlns:soap="http://cxf.apache.org/bindings/soap"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+						http://www.springframework.org/schema/beans/spring-beans.xsd
+						http://www.springframework.org/schema/context
+						http://www.springframework.org/schema/context/spring-context.xsd
+						http://www.springframework.org/schema/aop
+						http://www.springframework.org/schema/aop/spring-aop.xsd
+						http://www.springframework.org/schema/tx 
+						http://www.springframework.org/schema/tx/spring-tx.xsd
+						http://cxf.apache.org/bindings/soap 
+						http://cxf.apache.org/schemas/configuration/soap.xsd
+						http://cxf.apache.org/jaxws 
+						http://cxf.apache.org/schemas/jaxws.xsd
+						">
+	
+	<!-- 加载属性文件 -->
+	<context:property-placeholder location="classpath:db.properties"/>
+				
+	<!-- 配置数据源 -->
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+		<property name="driverClass" value="${jdbc.driverClass}"/>
+		<property name="jdbcUrl" value="${jdbc.jdbcUrl}"/>
+		<property name="user" value="${jdbc.user}"/>
+		<property name="password" value="${jdbc.password}"/>
+		<property name="testConnectionOnCheckout" value="true"></property>
+  		<property name="testConnectionOnCheckin" value="true"></property>
+   		<property name="preferredTestQuery" value="SELECT 1"></property>
+   		<property name="idleConnectionTestPeriod" value="60"></property>
+	</bean>
+	
+	<!-- 配置LocalSessionFactoryBean，spring提供的用于整合hibernate的工厂bean -->
+	<bean id="sessionFactory" class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"/>
+		<!-- 注入hibernate相关的属性配置 -->
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>
+				<prop key="hibernate.hbm2ddl.auto">update</prop>
+				<prop key="hibernate.show_sql">true</prop>
+				<prop key="hibernate.format_sql">true</prop>
+				<prop key="hibernate.autoReconnect">true</prop> 
+			</props>
+		</property>
+	  <!-- 自动扫描注解方式配置的hibernate类文件 -->  
+        <property name="packagesToScan">  
+            <list>  
+                <value>com.qgx.selectSubjectMS.entity</value>  
+            </list>  
+        </property> 
+	</bean>
+	
+	<!-- 配置事务管理器 -->
+	<bean id="transactionManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory"/>
+	</bean>
+ 
+	<!-- 组件扫描 -->
+	<context:component-scan base-package="com.qgx.selectSubjectMS"/>
+	
+	<!-- 支持spring注解 -->
+	<context:annotation-config/>
+	<tx:annotation-driven/>
+	
+	<!-- 配置shiro框架的过滤器工厂对象 -->
+	<bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+		<!-- 注入安全管理器对象 -->
+		<property name="securityManager" ref="securityManager"/>
+		<!-- 注入相关页面访问URL -->
+		<property name="loginUrl" value="/login.jsp"/>
+		<property name="unauthorizedUrl" value="/unauthorized.jsp"/>
+		<!--注入URL拦截规则 -->
+		<property name="filterChainDefinitions">
+			<value>
+				<!-- 不需要认证和授权的部分 -->
+				 /style/** = anon
+				/index.jsp = anon
+				/login.jsp = anon
+				/findPassword.jsp = anon
+				/emailSuccess.jsp = anon
+				/resetPsw.jsp = anon
+				/user_logout.action = logout
+				/user_checkImg.action = anon
+				/user_login.action = anon
+				/user_resetPswPage.action = anon
+				/user_toResetPage.action = anon
+				/user_resetPsw.action = anon
+			
+				<!-- 管理员操作权限 -->
+				/admin_*.action = roles[admin]
+				/admin/** = roles[admin]
+				<!-- 系主任操作权限 -->
+				/deptHead_*.action = roles[deptHead]
+				/deptHead/** = roles[deptHead]
+				<!-- 教师操作权限 -->
+				/teacher_*.action = roles[teacher]
+				/teacher/** = roles[teacher]
+				<!-- 学生操作权限 -->
+				/student_*.action = roles[student]
+				/student/** = roles[student]
+				
+				<!-- 所有请求都要先认证 -->
+				/** = authc	
+			</value>
+		</property>
+	</bean>
+	
+	<!-- 注册安全管理器对象 -->
+	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+			<!-- 注入自定义Realm -->
+			<property name="realm" ref="userRealm"/>
+			<!-- 注入缓存管理器 -->
+			<property name="cacheManager" ref="cacheManager"/>
+		
+	</bean>
+	
+	<!-- 注册realm -->
+	<bean id="userRealm" class="com.qgx.selectSubjectMS.realm.UserRealm"></bean>
+	
+	<!-- 注册缓存管理器 -->
+	<bean id="cacheManager" class="org.apache.shiro.cache.ehcache.EhCacheManager">
+		<!-- 注入ehcache的配置文件 -->
+		<property name="cacheManagerConfigFile" value="classpath:ehcache.xml"/>
+	</bean>
+</beans>
